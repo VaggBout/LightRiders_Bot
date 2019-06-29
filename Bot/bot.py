@@ -94,7 +94,7 @@ class Bot:
         print(legal)
 
         if len(legal) == 0:
-            desired_direction = "pass"
+            desired_move = "pass"
         else:
             # remove useless tuples from legal var
             legal_dirs = []  # legal directions (legal moves w/o the tuples)
@@ -102,7 +102,7 @@ class Bot:
                 legal_dirs.append(direction)
 
             # if on first round
-            # just head to the nearest wall
+            # just head to the opposite direction of nearest wall
             if self.game.round == 0:
                 # calculate distances from each wall
                 dist_to_walls = {}
@@ -111,8 +111,8 @@ class Bot:
                 dist_to_walls["left"] = my_col
                 dist_to_walls["right"] = self.game.field_width - my_row
 
-                # find min distance
-                desired_direction = min(dist_to_walls, key=dist_to_walls.get)
+                # find max distance
+                desired_move = max(dist_to_walls, key=dist_to_walls.get)
 
             # if not on first round
             else:
@@ -166,7 +166,7 @@ class Bot:
                         pass
 
                 if len(legal_dirs) == 1:
-                    desired_direction = legal_dirs[0]
+                    desired_move = legal_dirs[0]
 
                 # Flood fill count in 2 directions to find max space and make the move
                 # that leads there
@@ -182,9 +182,9 @@ class Bot:
                     if next_moves_counts[first_move] == next_moves_counts[second_move]:
                         self.min_max(self.game, self.game.my_botid, self.game.players, self.game.field.desired_depth,
                                      -100000, 100000)
-                        _, desired_direction = self.next_move
+                        _, desired_move = self.next_move
                     else:
-                        desired_direction = max(next_moves_counts, key=next_moves_counts.get)
+                        desired_move = max(next_moves_counts, key=next_moves_counts.get)
 
                 # Flood fill count in 3 directions to find max space and make the move
                 # that leads there
@@ -202,22 +202,22 @@ class Bot:
                     if next_moves_counts[first_move] != next_moves_counts[second_move] or \
                                     next_moves_counts[first_move] != next_moves_counts[third_move] or \
                                     next_moves_counts[second_move] != next_moves_counts[third_move]:
-                        desired_direction = max(next_moves_counts, key=next_moves_counts.get)
+                        desired_move = max(next_moves_counts, key=next_moves_counts.get)
                     else:
                         # If equal use min max to calculate next moves
                         self.min_max(self.game, self.game.my_botid, self.game.players, self.game.field.desired_depth, -100000, 100000)
                         print(self.game.field.next_move, file=sys.stderr)
                         print(self.next_move, file=sys.stderr)
-                        _, desired_direction = self.next_move
+                        _, desired_move = self.next_move
                 else:  # this probably never comes up - not sure
-                    desired_direction = "pass"
+                    desired_move = "pass"
 
-        if desired_direction == "pass":
+        if desired_move == "pass":
             self.last_move = "pass"
             self.game.issue_order_pass()
         else:
-            self.last_move = desired_direction
-            self.game.issue_order(desired_direction)
+            self.last_move = desired_move
+            self.game.issue_order(desired_move)
 
     """
     MinMax algorithm with AB pruning implementation.
